@@ -8,6 +8,8 @@ import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 @Service
@@ -17,14 +19,19 @@ public class UserProducerService {
     final KafkaTemplate<String, String> kafkaTemplate;
     final ObjectMapper objectMapper;
 
-    public void sendData( User user ) {
+    public void sendData(User user, long timex) {
         String data = "";
-        for (int i = 0; i < 10000; i++) {
             user.setName(UUID.randomUUID().toString());
             try {
                 data = objectMapper.writeValueAsString(user);
             }catch (Exception ex) {}
-                kafkaTemplate.send("paycoreTopic",data).addCallback(new ListenableFutureCallback<SendResult<String, String>>() {
+            long time = System.currentTimeMillis();
+
+        String finalData = data;
+        TimerTask timerTask = new TimerTask() {
+            @Override
+            public void run() {
+                kafkaTemplate.send("paycoreTopic1", 1, time, "part_key" , finalData).addCallback(new ListenableFutureCallback<SendResult<String, String>>() {
                     @Override
                     public void onFailure(Throwable ex) {
                         System.err.println("Send Error : " + ex);
@@ -33,11 +40,16 @@ public class UserProducerService {
                     @Override
                     public void onSuccess(SendResult<String, String> result) {
                         System.out.println("onSuccess : " + result.toString());
-                        long end = System.currentTimeMillis();
-                        System.out.println("end : " + end);
+                        System.out.println(result.getProducerRecord().timestamp());
                     }
+
                 });
+
+
             }
+        };
+        Timer timer = new Timer();
+        timer.schedule(timerTask, timex);
 
     }
 
