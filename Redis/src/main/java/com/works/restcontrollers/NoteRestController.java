@@ -1,6 +1,7 @@
 package com.works.restcontrollers;
 
 import com.works.entities.Note;
+import com.works.models.RedisNote;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import com.works.services.NoteService;
@@ -20,7 +21,7 @@ public class NoteRestController {
     }
 
     @GetMapping("/list")
-    public List<Note> list() {
+    public List<RedisNote> list() {
         return noteService.list();
     }
 
